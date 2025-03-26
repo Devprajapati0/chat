@@ -7,7 +7,12 @@ const Chat = lazy(()=>import('./pages/Chat'))
 const Group = lazy(()=>import('./pages/Group'))
 import ProtectRoute from './components/auth/protectRoute'
 import Loader from './components/layout/Loader'
-let user = true;
+const AdminLogin = lazy(()=>import('./pages/admin/AdminLogin'))
+const Dashboard = lazy(()=>import('./pages/admin/Dashboard'))
+const UserManagement = lazy(()=>import('./pages/admin/UserManagement'))
+const MessageManagement = lazy(()=>import('./pages/admin/MessageManagement'))
+const ChatManagement = lazy(()=>import('./pages/admin/ChatManagement'))
+let user = false;
 const App = () => {
   return (
     <Router>
@@ -20,6 +25,11 @@ const App = () => {
        </Route>
         <Route path="/login" element={<ProtectRoute user={!user} redirect='/'><Login/></ProtectRoute>} />
         <Route path="*" element={<div>404</div>} />
+        <Route path='/admin' element={<AdminLogin />} />
+        <Route path='/admin/dashboard' element={<Dashboard />} />
+        <Route path='/admin/user' element={<UserManagement />} />
+        <Route path='/admin/message' element={<MessageManagement />} />
+        <Route path='/admin/chat' element={<ChatManagement />} />
       </Routes>
        </Suspense>
     </Router>

@@ -4,12 +4,12 @@ import { Add as AddIcon,Remove as RemoveIcon } from "@mui/icons-material";
 
 
   
-const UserItem = ({ user, handler, handlerIsLoading,isAdded = false }) => {
+const UserItem = ({ user, handler, handlerIsLoading,isAdded = false, styling = {} }) => {
   const { _id, name } = user;
 
   return (
     <ListItem>
-      <Stack direction="row" spacing={2} alignItems="center">
+      <Stack direction="row" spacing={2} alignItems="center" {...styling}>
         <Avatar />
         <Typography
           sx={{

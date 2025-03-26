@@ -16,7 +16,7 @@ export const ChatList = ({
 }) => {
     
   return (
-    <Stack width={w} direction="column">
+    <Stack overflow={"auto"} width={w} height={"100%"} direction="column">
       {chats.map((data,index) => {
         const { avatar, _id, name, groupchat, members } = data;
         
