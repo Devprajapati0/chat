@@ -17,6 +17,11 @@ const Login = () => {
     e.preventDefault();
     console.log("Form Submitted");
   };
+  const loginWithGoogle = () => {
+    window.location.href = "http://localhost:8000/api/v1/user/google";
+  };
+
+
 
   return (
     <Container maxWidth="sm" component="main" style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
@@ -80,6 +85,17 @@ const Login = () => {
               </>
             )}
           </Typography>
+          <div>
+      <h1>Login</h1>
+       (
+        <button
+          onClick={loginWithGoogle}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
+        >
+          Login with Google
+        </button>
+      )
+    </div>
         </form>
       </Paper>
     </Container>
