@@ -1,0 +1,4 @@
+const ALERT = 'ALERT';
+const REFETECH_CHATS = 'REFETECH_CHATS';
+
+export { ALERT, REFETECH_CHATS };

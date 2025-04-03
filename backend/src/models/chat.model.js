@@ -1,9 +1,12 @@
+import mongoose, { model, Schema } from "mongoose";
+import dotenv from "dotenv";
+dotenv.config();
+
 const chatSchema = new Schema(
     {
       creator: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        required: true,
       },
       members: [
         {
@@ -18,7 +21,6 @@ const chatSchema = new Schema(
       },
       groupChat: {
         type: Boolean,
-        required: true,
         default: false,
       },
     },

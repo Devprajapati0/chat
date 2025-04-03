@@ -12,7 +12,7 @@ const Dashboard = lazy(()=>import('./pages/admin/Dashboard'))
 const UserManagement = lazy(()=>import('./pages/admin/UserManagement'))
 const MessageManagement = lazy(()=>import('./pages/admin/MessageManagement'))
 const ChatManagement = lazy(()=>import('./pages/admin/ChatManagement'))
-let user = false;
+let user = true;
 const App = () => {
   return (
     <Router>

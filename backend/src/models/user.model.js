@@ -26,6 +26,11 @@ const userSchema = new Schema(
       required: [true, "Please provide a password"],
       minlength: 6,
     },
+    bio:{
+      type:String,
+      required:false,
+      default:null
+    },
     avatar: {
       public_id: {
         type: String,
@@ -57,14 +62,6 @@ const userSchema = new Schema(
   },
   { timestamps: true }
 );
-
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-
-  this.password = await bcrypt.hash(this.password, 12);
-  next();
-});
-
 userSchema.methods.matchPasswords = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
