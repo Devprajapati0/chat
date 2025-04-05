@@ -40,8 +40,9 @@ console.log('MAILER_PASS:', process.env.MAILER_PASS);
 
     const info = await transporter.sendMail(mailOptions);
     console.log('info', info);
-    return info; 
+    return info;
   } catch (error) {
+    console.error('Error sending email:', error);
     throw new Error(error.message);
   }
 }

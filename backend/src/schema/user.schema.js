@@ -22,19 +22,23 @@ export const verifySchema = z.object({
 })
 
 
-const emailSchema = z.string()
+const emailSchema = z.string() 
     .regex(/^[\w-]+(?:\.[\w-]+)*@(?:[\w-]+\.)+[a-zA-Z]{2,7}$/, { message: "Invalid email format" });
-
+    
+    const usernameSchema2 = z.string()
+    .min(2, "username must contain 2 letters")
+    .max(20, "username must be no more than 20 letters")
+    .regex(/^[a-zA-Z0-9_]+$/, "username should not have special characters");
 
 export const loginSchema = z.object({
-        identifier: usernameScheam.or(emailSchema), // Ensuring either username or email is provided
+        identifier: usernameSchema2.or(emailSchema), // Ensuring either username or email is provided
         password: z.string()
             .min(6, { message: "Password must be at least 6 characters long" })
             .max(12, { message: "Password must be at most 12 characters long" }),
 });
 
 export const forgotPasswordSchema = z.object({
-        identifier: usernameScheam.or(emailSchema), // Ensuring either username or email is provided
+        identifier: usernameSchema2.or(emailSchema), // Ensuring either username or email is provided
         newpassword: z
           .string()
           .min(6, { message: "Password must be at least 6 characters long" })

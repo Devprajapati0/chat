@@ -13,13 +13,13 @@ router.route('/google/callback').get(passport.authenticate('google', { session: 
 router.route("/register").post(upload.single("avatar"),registerUser); 
 router.route("/verify-code").post(verifyCode);
 router.route("/username").get(usernameUnique);
-router.route('/forgot-password').post(forgotPassword);
+router.route('/forgot-password').put(forgotPassword);
 router.route('/resend-email').post(resendEmail);
 
 router.route('/logout').get(authenticator,logoutUser)
 router.route('/profile-detail').get(authenticator,getProfileDetails);
-router.route('/update-profile').post(authenticator,upload.single("avatar"),updateProfileDetails);
-router.route('/change-password').post(authenticator,changePassword);
-
+router.route('/update-profile').put(authenticator,upload.single("avatar"),updateProfileDetails);
+router.route('/change-password').put(authenticator,changePassword);
+ 
 export default router;
 

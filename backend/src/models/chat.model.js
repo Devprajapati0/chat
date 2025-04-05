@@ -23,6 +23,34 @@ const chatSchema = new Schema(
         type: Boolean,
         default: false,
       },
+      avatar: {
+        public_id: {
+          type: String,
+          required: false,
+        },
+        url: {
+          type: String,
+          required: false,
+        },
+      },
+      lastmessage: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Message",
+      },
+      addmembersallowed: {
+        type: Boolean,
+        default: false,
+      },
+      sendmessageallowed: {
+        type: Boolean,
+        default: true,
+      },
+      isAdmin:[
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+      ],
     },
     { timestamps: true }
   );

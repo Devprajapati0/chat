@@ -152,6 +152,15 @@ if(!signupData.success){
         //email verification
         //send email
         const emailResponse = await sendVerificationEmail(signupData.data.username,signupData.data.email,verifyCode)
+        if(!emailResponse){
+            return res.json(
+                new apiResponse(
+                    400,
+                    null,
+                    "Email not sent"
+                )
+            )
+        }
           console.log("emialResponse",emailResponse)
 
         return res.json(
