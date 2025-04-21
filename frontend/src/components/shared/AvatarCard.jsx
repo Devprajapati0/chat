@@ -1,27 +1,21 @@
 import { Avatar, AvatarGroup, Stack } from "@mui/material";
 import React from "react";
 
-const AvatarCard = ({ avatar = [], max = 4 }) => {
+const AvatarCard = ({ avatar, size = "3rem" }) => {
+  const imageUrl = avatar?.url || ""; // fallback in case avatar is undefined
+  // console.log("Avatar URL:", imageUrl);
+
   return (
-    <Stack direction={"row"} spacing={0.5}>
-      <AvatarGroup max={max} sx={
-        {
-          position:"relative"
-        }
-      } >
-        {avatar.map((src, index) => (
-          <Avatar
-            key={index} // ✅ Use index instead of Math.random
-            src={src}
-            alt={`Avatar ${index}`}
-            sx={{
-              width: "3rem",
-              height: "3rem",
-              border: "2px solid white",
-            }}
-          />
-        ))}
-      </AvatarGroup>
+    <Stack direction="row" spacing={0.5}>
+      <Avatar
+        src={imageUrl}
+        alt="User Avatar"
+        sx={{
+          width: size,
+          height: size,
+          border: "2px solid white",
+        }}
+      />
     </Stack>
   );
 };

@@ -1,45 +1,68 @@
-import { Stack } from "@mui/material";
+import { Stack, Typography, Divider, Box } from "@mui/material";
 import ChatItem from "../shared/ChatItem";
 
 export const ChatList = ({
   w = "100%",
-  chats = [], 
+  chats = [],
   chatID,
   onlineUsers = [],
-  newMessageAlert = [
-    {
-        chatID:"0",
-        count:0
-    }
-  ],
+  newMessageAlert,
   handleDeleteChat,
 }) => {
-    
+  // console.log("chats", chats);
   return (
-    <Stack overflow={"auto"} width={w} height={"100%"} direction="column">
-      {chats.map((data,index) => {
-        const { avatar, _id, name, groupchat, members } = data;
-        
-        const alert = newMessageAlert.find(
-            ({ chatID }) => chatID === _id
-        ) || { count: 0 };
+    <Box
+      width={w}
+      height="100%"
+      sx={{
+        overflowY: "auto",
+        borderRadius: 2,
+        bgcolor: "#ffffff",
+        boxShadow: 1,
+        px: 1,
+        py: 1,
+      }}
+    >
+      <Typography
+        variant="h6"
+        sx={{ textAlign: "center", mb: 1, color: "#1976d2" }}
+      >
+        Your Chats
+      </Typography>
+      <Divider sx={{ mb: 1 }} />
 
-        const isOnline = members?.some((member) => onlineUsers.includes(_id));
+      <Stack spacing={1}>
+        {chats.map((data, index) => {
+          const { avatar, _id, name, groupChat = false, members = [] } = data;
+
+          const isOnline = groupChat
+            ? false
+            : members?.some((member) => onlineUsers.includes(member._id));
+
+          const alert =
+            newMessageAlert.find((item) => item.chatId === _id) || { count: 0 };
         
-        return (
-          <ChatItem 
-            key={_id}
-            index={index}
-            avatar={avatar}
-            name={name}
-            _id={_id}
-            groupChat={groupchat}
-            isOnline={isOnline}
-            newMessageAlert={alert}
-            handleDeleteChat={handleDeleteChat}
-          />
-        );
-      })}
-    </Stack>
+          return (
+            <ChatItem
+              key={_id}
+              index={index}
+              avatar={avatar}
+              name={name}
+              _id={_id}
+              groupChat={groupChat}
+              isOnline={isOnline}
+              newMessageAlert={alert}
+              handleDeleteChat={handleDeleteChat}
+              isSelected={_id === chatID}
+            />
+          );
+        })}
+        {chats.length === 0 && (
+          <Typography variant="body2" color="textSecondary" textAlign="center">
+            No chats available
+          </Typography>
+        )}
+      </Stack>
+    </Box>
   );
 };

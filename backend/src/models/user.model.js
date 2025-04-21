@@ -54,6 +54,17 @@ const userSchema = new Schema(
       type:Date,
       required:[true,"verify code expiry is required"],
   },
+  publicKey: {
+    type: String,
+    required: false,
+    default: null,
+  },
+  chats:[
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Chat",
+    },
+  ],
   refreshToken:{
     type:String,
     required:false,

@@ -1,52 +1,31 @@
 import { memo } from "react";
-import { Box, Typography, Avatar, Stack } from "@mui/material";
+import { Box, Typography, Stack } from "@mui/material";
+import {motion} from "framer-motion";
 import { fileFormat } from "../../lib/feature";
 import RenderAttachment from "./RenderAttachment";
-
-export const samplemessage = [
-  {
-    attachment: [
-      {
-        public_id: "img1",
-        //i have a image in my current folder i awant to put that imahe here 
-        url:"https://imgs.search.brave.com/_yV-m2EQ6woxay1l_M4PA993pz2lHPX_quV-84L7NPs/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvMTc4/NTgwODI1OS9waG90/by9uZXR3b3JraW5n/LW9wcG9ydHVuaXRp/ZXMuanBnP3M9NjEy/eDYxMiZ3PTAmaz0y/MCZjPXBnckIzUHky/S0phT21vaGo3d1JZ/bUlnMGZyamdTQzBu/WEJCZmJEYi1ISDQ9"
-
-      },
-    ],
-    content: "Hello! How are you?",
-    _id: "1",
-    sender: {
-      _id: "1",
-      name: "John",
-    },
-    chat: "chat_id",
-    createdAt: "2021-09-30T12:00:00.000Z",
-  },
-  {
-    attachment: [
-      {
-        public_id: "img2",
-        url:"https://imgs.search.brave.com/_yV-m2EQ6woxay1l_M4PA993pz2lHPX_quV-84L7NPs/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvMTc4/NTgwODI1OS9waG90/by9uZXR3b3JraW5n/LW9wcG9ydHVuaXRp/ZXMuanBnP3M9NjEy/eDYxMiZ3PTAmaz0y/MCZjPXBnckIzUHky/S0phT21vaGo3d1JZ/bUlnMGZyamdTQzBu/WEJCZmJEYi1ISDQ9"
-      },
-    ],
-    content: "Hey John! I'm good, thanks!",
-    _id: "2",
-    sender: {
-      _id: "4",
-      name: "Alice",
-    },
-    chat: "chat_id",
-    createdAt: "2021-09-30T12:05:00.000Z",
-  },
-];
-
-const MessageComponent = ({ message, user }) => {
-  const { sender, content, attachment, createdAt } = message;
-
+import { useSelector } from "react-redux";
+import AvatarCard from "./AvatarCard";
+// chat: "67f0dc54a91b5c403d8f3378"
+// content: "zz"
+// createdAt: "2025-04-16T10:09:00.425Z"
+// sender: 
+// _id: "67e8e9cef5edef71a671a98d"
+// _id: "2d3d8c80-4841-4f40-b07b-4d34a50eb6d9
+const MessageComponent = ({ message }) => {
+  const {user} = useSelector((state) => state.auth);
+  // console.log("MessageCommkponent", message);
+  // console.log("MessageComponrrent", data);
+  // const user ={_id:"67e8e9cef5edef71a671a98d"};
+  const { sender, content, attachments, createdAt } = message;
+   console.log("MessageComponent", sender);
+  // console.log("MessageComponent", message);
   const isUserMessage = sender._id === user._id;
-
+  
   return (
-    <Stack
+    <motion.div
+      initial={{ opacity: 0, x:"-100%" }}
+      whileInView={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, y: -10 }}
       direction="row"
       justifyContent={isUserMessage ? "flex-end" : "flex-start"}
       alignItems="center"
@@ -54,7 +33,7 @@ const MessageComponent = ({ message, user }) => {
       sx={{ width: "100%", mb: 2 }}
     >
       {/* Sender's Avatar (If it's not the user) */}
-      {!isUserMessage && <Avatar>{sender.name[0]}</Avatar>}
+      {!isUserMessage && <AvatarCard avatar ={sender.avatar}/>}
 
       {/* Message Box */}
       <Box
@@ -68,7 +47,7 @@ const MessageComponent = ({ message, user }) => {
         }}
       >
         <Typography variant="body2" sx={{ fontWeight: "bold", color: "gray" }}>
-          {sender.name}
+          {sender.username}
         </Typography>
 
         {/* Display Message Text */}
@@ -79,7 +58,7 @@ const MessageComponent = ({ message, user }) => {
         )}
 
         {/* Display Attachments (Images or Files) */}
-        {attachment?.length > 0 && attachment.map((file, index) => (
+        {attachments?.length > 0 && attachments.map((file, index) => (
   <Box key={index} sx={{ mt: 1 }}>
     <a
   href={file.url}  // Ensure `file.url` is set correctly
@@ -100,8 +79,8 @@ const MessageComponent = ({ message, user }) => {
       </Box>
 
       {/* User's Avatar (If it's the user) */}
-      {isUserMessage && <Avatar>{user.name[0]}</Avatar>}
-    </Stack>
+      {isUserMessage &&<AvatarCard avatar ={sender.avatar}/>}
+    </motion.div>
   );
 };
 

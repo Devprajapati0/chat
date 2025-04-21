@@ -3,113 +3,116 @@ import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import { Stack, Typography, Badge, Box } from "@mui/material";
 import AvatarCard from "./AvatarCard";
+import {motion} from "framer-motion";
 
 const ChatItem = React.memo(function ChatItem({
-  avatar = [],
+  avatar = {},
   name,
   _id,
   groupChat = false,
-  sameSender = false,
-  isOnline = false,
   newMessageAlert,
   handleDeleteChat,
+  isOnline = false,
+  isSelected = false,
 }) {
-
-
+  // console.log("alert", newMessageAlert);
   return (
-    <Link 
+    <Link
       to={`/chat/${_id}`}
-      style={{ color: "black", textDecoration: "none" }}
+      style={{ textDecoration: "none" }}
       onContextMenu={(e) => handleDeleteChat(e, _id, groupChat)}
     >
       <Box
         sx={{
           display: "flex",
-          gap: 2,
-          flexDirection: "row",
           alignItems: "center",
-          padding: 2,
-          position: "relative",
-          borderBottom: "1px solid #f0f0f0",
-          backgroundColor: sameSender ? "#e0f7fa" : "white",
-          color: "black",
-          borderRadius: "10px",
-          transition: "0.3s",
-          "&:hover": { backgroundColor: "#f5f5f5" },
+          gap: 2,
+          px: 2,
+          py: 1.5,
+          borderRadius: 2,
+          bgcolor: isSelected ? "#e3f2fd" : "transparent",
+          transition: "all 0.3s ease",
+          cursor: "pointer",
+          "&:hover": {
+            bgcolor: "#f5f5f5",
+            boxShadow: 1,
+          },
         }}
       >
         {/* Avatar with Online Badge */}
         <Badge
+          variant="dot"
           color="success"
           overlap="circular"
-          badgeContent=""
           invisible={!isOnline}
           sx={{
             "& .MuiBadge-badge": {
-              width: 12,
-              height: 12,
+              width: 10,
+              height: 10,
               borderRadius: "50%",
               border: "2px solid white",
-              backgroundColor: "blue",
+              backgroundColor: "#44b700",
+              top: 4,
+              right: 4,
             },
           }}
         >
-          <AvatarCard sx={{backgroundColor:"green"}} src={avatar || "/default-avatar.png"} alt={name} />
+          <AvatarCard
+            src={avatar?.url || "/default-avatar.png"}
+            alt={name}
+            sx={{ width: 50, height: 50 }}
+          />
         </Badge>
 
-        {/* Chat Details */}
-        <Stack direction="column">
-          <Typography fontWeight="bold">{name}</Typography>
+        {/* Chat Info */}
+        <Stack spacing={0.5}>
+          <Typography
+            fontWeight="600"
+            color="text.primary"
+            noWrap
+            maxWidth="180px"
+          >
+            {name}
+          </Typography>
 
           {newMessageAlert?.count > 0 && (
             <Typography
               sx={{
-                backgroundColor: "blue",
-                color: "white",
-                borderRadius: "12px",
-                padding: "4px 8px",
                 fontSize: "12px",
-                fontWeight: "bold",
+                bgcolor: "#1976d2",
+                color: "white",
+                px: 1,
+                py: 0.25,
+                borderRadius: "10px",
                 display: "inline-block",
-                marginTop: "4px",
+                width: "fit-content",
+                fontWeight: 500,
               }}
             >
-              {newMessageAlert.count} New Messages
+              {newMessageAlert.count} new message
+              {newMessageAlert.count > 1 ? "s" : ""}
             </Typography>
           )}
         </Stack>
-
-        {isOnline && (
-          <Box
-            sx={{
-              width: "12px",
-              height: "12px",
-              borderRadius: "50%",
-              backgroundColor: "green",
-              position: "absolute",
-              top: "50%",
-              right: "1rem",
-              transform: "translateY(-50%)",
-            }}
-          />
-        )}
       </Box>
     </Link>
   );
 });
 
 ChatItem.propTypes = {
-  avatar: PropTypes.arrayOf(PropTypes.string),
+  avatar: PropTypes.shape({
+    url: PropTypes.string,
+  }),
   name: PropTypes.string.isRequired,
   _id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
   groupChat: PropTypes.bool,
-  sameSender: PropTypes.bool,
-  isOnline: PropTypes.bool,
   newMessageAlert: PropTypes.shape({
     chatID: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     count: PropTypes.number,
   }),
   handleDeleteChat: PropTypes.func.isRequired,
+  isOnline: PropTypes.bool,
+  isSelected: PropTypes.bool,
 };
 
 export default ChatItem;

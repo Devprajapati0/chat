@@ -3,7 +3,8 @@ import { createGroup,getMyChats,getMyGroups,addMembers,
     membersUseriaAllowesToAdd,
     removeMembers,
     makeAdmin,
-    removeAdmin,leaveGroup } from "../controller/chat.controller.js";
+    updateGroupProfile,
+    removeAdmin,leaveGroup,getPublicKey,getInvidualChat,getCommonGroups } from "../controller/chat.controller.js";
 import authenticator from "../middleware/jwt.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
 const router = Router();
@@ -17,6 +18,11 @@ router.route('/make-admin').put(authenticator,makeAdmin);
 router.route('/remove-admin').put(authenticator,removeAdmin);
 router.route('/members-user-allowed-to-add').post(authenticator,membersUseriaAllowesToAdd);
 router.route('/:chatId/leave-group').post(authenticator,leaveGroup);
+router.route('/:chatId/update-group-profile').put(authenticator,upload.single("avatar"),updateGroupProfile);
+router.route('/get-chat/:chatId').get(authenticator,getInvidualChat);
+router.route('/get-common-groups').post(authenticator,getCommonGroups);
+router.route('/:chatId').get(authenticator,getPublicKey);
+
 // router.route('/get-chat/:chatId').get(authenticator,getChat);
 // router.route('/get-group/:groupId').get(authenticator,getGroup);
 // router.route('/get-group-messages/:groupId').get(authenticator,getGroupMessages);

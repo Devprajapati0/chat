@@ -80,3 +80,4 @@ const DoughnutChart = () => {
 };
 
 export { LineChart, DoughnutChart };
+

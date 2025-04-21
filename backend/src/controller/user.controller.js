@@ -1,10 +1,11 @@
-import apiResponse from "../utils/apiresponse.js";
+import apiResponse from "../utils/apiResponse.js";
 import {User} from "../models/user.model.js";
 import asynhandler from "../utils/asynchandler.js";
 import { signupSchema, verifySchema,loginSchema, usernameScheam, forgotPasswordSchema, updateProfileSchema, changePasswordSchema } from "../schema/user.schema.js";
 import bcrypt from "bcryptjs";
 import { sendVerificationEmail } from "../helpers/mailer.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import crypto from "crypto";
 
 const generateAccessTokenRefreshToken = async (userId) => {
     try {
@@ -60,19 +61,15 @@ const googleLogin = asynhandler(async (req, res) => {
     }
 });
 
+                  
+          
+
 const registerUser = asynhandler(async(req,res) => {
+    console.log("req.body",req.body)
+    const data = req.body;
+    console.log("data",data)
 
-const signupData = signupSchema.safeParse( req.body);
-
-if(!signupData.success){
-    return res.json(
-        new apiResponse(
-            400,
-          null,
-           "Credentials required"
-        )
-    )} 
-
+ 
    
     /*
     case 1: username exist and verified
@@ -82,8 +79,9 @@ if(!signupData.success){
     */
     try {
         // case 1
+        let encodedPrivateKey ;
         const exisitngUserVerifiedByUsername = await User.findOne({
-            username:signupData.data.username,
+            username:data.username,
             isVerified:true
         })
         console.log("exisitngUserVerifiedByUsername",exisitngUserVerifiedByUsername)
@@ -101,7 +99,7 @@ if(!signupData.success){
         const verifyCode = Math.floor(100000 + Math.random() * 900000).toString()
         // case 2
         const existingEmail = await User.findOne({
-            email:signupData.data.email,
+            email:data.email,
         })
         console.log("existingEmail",existingEmail)
         if(existingEmail){
@@ -116,8 +114,8 @@ if(!signupData.success){
            }
            else{
                 // case 3
-                console.log("hasheuejdnjs",signupData.data.password)
-                const hashedPassword = await bcrypt.hash(signupData.data.password,12);
+                console.log("hasheuejdnjs",data.password)
+                const hashedPassword = await bcrypt.hash(data.password,12);
                 existingEmail.password = hashedPassword
                 existingEmail.verifyCode = verifyCode
                 existingEmail.verifyCodeExpiry = new Date(Date.now() + 60000); // 1 minute expiry
@@ -127,23 +125,26 @@ if(!signupData.success){
            }
         }
         else{
-            console.log("hasheuejdnjs",signupData.data.password)
+            console.log("hasheuejdnjs")
+            // console.log("hasheuejdnjs",data.password)
             const url =await req.file?.path; 
             const fileUpload = await uploadOnCloudinary(url)
-            console.log("fileUpload",fileUpload)
-            const hashedPassword = await bcrypt.hash(signupData.data.password,12);
+            // console.log("fileUpload",fileUpload)
+            const hashedPassword = await bcrypt.hash(data.password,12);
             const expiryDate = new Date();
             expiryDate.setMinutes(expiryDate.getMinutes() + 1); // Set expiry for 1 minute            
             const newUser = new User({
-                username:signupData.data.username,
-                email:signupData.data.email,
+                username:data.username,
+                email:data.email,
                 password:hashedPassword,
                 verifyCode:verifyCode,
                 verifyCodeExpiry:expiryDate,
                 avatar:{
                     public_id:fileUpload.public_id,
                     url:fileUpload.url
-                }
+                },
+                publicKey:data.publicKey,
+               
             })
             await newUser.save()
             console.log("newUser",newUser)
@@ -151,7 +152,10 @@ if(!signupData.success){
 
         //email verification
         //send email
-        const emailResponse = await sendVerificationEmail(signupData.data.username,signupData.data.email,verifyCode)
+
+      // 🔐 Encrypt private key with user password
+
+        const emailResponse = await sendVerificationEmail(data.username,data.email,verifyCode)
         if(!emailResponse){
             return res.json(
                 new apiResponse(
@@ -328,6 +332,8 @@ const loginUser = asynhandler(async(req,res) => {
       };
   
       // Set access & refresh tokens in cookies
+      console.log("accessToken",accessToken)
+      console.log("refreshToken",refreshToken)
       return res
         .status(200)
         .cookie("accessToken", accessToken, options)
@@ -646,6 +652,52 @@ const changePassword = asynhandler(async(req,res) => {
     }
 })
 
+export const blockUser = asynhandler(async (req, res) => {
+    const { userId } = req.body;
+    const currentUserId = req.user._id; // assuming you're using middleware for auth
+  
+    if (!userId) {
+      return res.json(new apiResponse(400, null, "Target user ID is required"));
+    }
+  
+    const user = await User.findById(currentUserId);
+    if (!user) {
+      return res.json(new apiResponse(404, null, "User not found"));
+    }
+  
+    const isBlocked = user.blockedUsers.includes(userId);
+  
+    
+  
+    await user.save();
+    return res.json(
+      new apiResponse(200, user.blockedUsers, isBlocked ? "User unblocked" : "User blocked")
+    );
+});
+
+const getPublicKey = asynhandler(async (req, res) => {
+    const { userId } = req.body;
+    console.log("username", userId);
+
+    if (!userId) {
+        return res.json(new apiResponse(400, null, "Username is required"));
+    }
+
+    try {
+        const user = await User.findOne({ _id:userId });
+        if (!user) {
+            return res.json(new apiResponse(404, null, "User not found"));
+        }
+
+        return res.json(
+            new apiResponse(200, user.publicKey, "Public key retrieved successfully")
+        );
+    } catch (error) {
+        console.error("Error retrieving public key:", error);
+        return res.json(new apiResponse(500, null, "Error retrieving public key"));
+    }
+}
+)
 
 export  {
     registerUser,
@@ -659,8 +711,12 @@ export  {
     logoutUser,
     getProfileDetails,
     updateProfileDetails,
-    changePassword
+    changePassword,
+    getPublicKey
 
 }
 
 
+
+
+// 5.10

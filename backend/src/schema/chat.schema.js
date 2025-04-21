@@ -28,3 +28,14 @@ export const removeAdminSchema = z.object({
     chatId: z.string().min(1, "Chat ID is required"), // Ensure chatId is not empty
     userId: z.string().min(1, "User ID is required"), // Ensure at least one member
 });
+export const updateGroupProfileSchema = z.object({
+    name: z.string().trim().min(1, "Name cannot be empty").optional(),
+    sendmessageallowed: z.boolean().optional(),
+    addmembersallowed: z.boolean().optional(),
+    
+  });
+export const updateGroupSchema = z.object({
+    name: z.string().trim().min(1, "Name cannot be empty").optional(),
+    sendmessageallowed: z.boolean().optional(),
+    addmembersallowed: z.boolean().optional(),
+})

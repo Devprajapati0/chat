@@ -1,5 +1,14 @@
 import {z} from "zod";
 
+const emailSchema = z.string() 
+    .regex(/^[\w-]+(?:\.[\w-]+)*@(?:[\w-]+\.)+[a-zA-Z]{2,7}$/, { message: "Invalid email format" });
+    
+    const usernameSchema2 = z.string()
+    .min(2, "username must contain 2 letters")
+    .max(20, "username must be no more than 20 letters")
+    .regex(/^[a-zA-Z0-9_]+$/, "username should not have special characters");
+
+    
 export const signupSchema = z.object({
     username: z.string().min(2,"username must conatin 2 letters")
                         .max(20,"username must be no more 20 letters")
@@ -7,7 +16,8 @@ export const signupSchema = z.object({
 
    email: z.string().email({message:'Invalid email'}),
     password: z.string().min(6,{message:"password must be of minimum 6 characters"})     
-                        .max(12,{message:"password must be of maximum of 12 characters"}),                            
+                        .max(12,{message:"password must be of maximum of 12 characters"}),     
+   publicKey: z.string().optional(),                   
 })
 
 export const usernameScheam  = z.object({
@@ -22,13 +32,6 @@ export const verifySchema = z.object({
 })
 
 
-const emailSchema = z.string() 
-    .regex(/^[\w-]+(?:\.[\w-]+)*@(?:[\w-]+\.)+[a-zA-Z]{2,7}$/, { message: "Invalid email format" });
-    
-    const usernameSchema2 = z.string()
-    .min(2, "username must contain 2 letters")
-    .max(20, "username must be no more than 20 letters")
-    .regex(/^[a-zA-Z0-9_]+$/, "username should not have special characters");
 
 export const loginSchema = z.object({
         identifier: usernameSchema2.or(emailSchema), // Ensuring either username or email is provided

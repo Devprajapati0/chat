@@ -1,12 +1,13 @@
 import {Chat} from '../models/chat.model.js';
 import {User} from '../models/user.model.js';
 import asynhandler from '../utils/asynchandler.js';
-import { groupChatSchema,addMembersSchema, removeMembersSchema, makeAdminSchema , removeAdminSchema} from '../schema/chat.schema.js';
-import apiResponse from '../utils/apiresponse.js';
+import { groupChatSchema,addMembersSchema, removeMembersSchema, makeAdminSchema , removeAdminSchema, updateGroupProfileSchema} from '../schema/chat.schema.js';
+import apiResponse from '../utils/apiResponse.js';
 import { emitEvent } from '../utils/features.js';
 import { ALERT,REFETECH_CHATS } from '../helpers/events.js';
 import mongoose from 'mongoose';
-
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
+//alert me mesage and chatid doneo abj me dallo
 const createGroup = asynhandler(async (req, res) => {
     console.log("Create Group", req.body);
   
@@ -26,28 +27,51 @@ const createGroup = asynhandler(async (req, res) => {
   
       const { name, members, addmembersallowed = false, sendmessageallowed = true } = groupData.data;
       const allmembers = [...members, req.user._id];
-  
+
+      const enrichedMembers = await User.find({ _id: { $in: allmembers } })
+  .select('_id publicKey') // You can include more fields if needed
+  .lean(); 
+
+
+      
       const chat = new Chat({
         name,
-        members: allmembers,
+        members: enrichedMembers,
         creator: req.user._id,
         groupChat: true,
         addmembersallowed,
         sendmessageallowed,
-        avatar: {
-          public_id: req.file ? req.file.filename : null,
-          url: req.file ? req.file.path : null
-        },
         isAdmin: [req.user._id]
-      });
+    });
+    if(req.file){
+      console.log("File",req.file);
+      const url =await req.file?.path; 
+      const fileUpload = await uploadOnCloudinary(url)
+      console.log("fileUpload",fileUpload)
+      chat.avatar = {
+        public_id: fileUpload.public_id,
+        url: fileUpload.secure_url
+      };
+    }
   
       await chat.save();
+
   
       if (!chat) {
         return res.json(
           new apiResponse(400, null, "Failed to create group")
         );
       }
+
+      //save it in user 
+      const user = await User.findById(req.user._id);
+      if (!user) {
+        return res.json(
+          new apiResponse(400, null, "User not found")
+        );
+      }
+      user.chats.push(chat._id);
+      await user.save();
   
       emitEvent(req, ALERT, allmembers, `${req.user.name} created a new group chat ${name}`);
       emitEvent(req, REFETECH_CHATS, members, null);
@@ -62,6 +86,7 @@ const createGroup = asynhandler(async (req, res) => {
 const getMyChats = asynhandler(async (req, res) => {
         try {
           const userId = new mongoose.Types.ObjectId(req.user._id);
+          console.log("User ID", userId);
           if (!userId) {
             return res.json(new apiResponse(400, null, "User must login"));
           }
@@ -69,7 +94,9 @@ const getMyChats = asynhandler(async (req, res) => {
           const chats = await Chat.aggregate([
             {
               $match: {
-                members: { $in: [userId] }
+                members: {  $elemMatch: {
+                  _id: userId // Or use any other matching criteria for _id
+                } }
               }
             },
             {
@@ -144,6 +171,7 @@ const getMyChats = asynhandler(async (req, res) => {
               }
             }
           ]);
+          console.log("Chats", chats);
       
           return res.json(new apiResponse(200, chats, "Chats fetched"));
         } catch (error) {
@@ -174,6 +202,7 @@ const getMyGroups = asynhandler(async (req, res) => {
       }
 }
 );
+
 const makeAdmin = asynhandler(async (req, res) => {
     try {
         if (!req.user) {
@@ -365,6 +394,7 @@ const addMembers = asynhandler(async (req, res) => {
         return res.json(new apiResponse(500, null, "Failed to add members"));
     }
 });
+
 const removeMembers = asynhandler(async (req, res) => {
     try {
       if (!req.user) {
@@ -447,7 +477,10 @@ const leaveGroup = asynhandler(async (req, res) => {
             return res.json(new apiResponse(404, null, "Group not found"));
         }
 
-        const isAdmin = chat.isAdmin.includes(userId.toString());
+        
+        const isAdmin = chat.isAdmin.some(
+            (adminId) => adminId.toString() === req.user._id.toString()
+        );
 
         if (isAdmin && chat.isAdmin.length === 1) {
             return res.json(new apiResponse(400, null, "Cannot leave. You're the only admin."));
@@ -479,6 +512,135 @@ const leaveGroup = asynhandler(async (req, res) => {
 });
 
 
+const updateGroupProfile = asynhandler(async (req, res) => {
+  try {
+        if (!req.user) {
+            return res.json(new apiResponse(400, null, "User must login"));
+        }
+
+        const { chatId } = req.params;
+        const updateData = await updateGroupProfileSchema.safeParse(req.body);
+        if (!updateData.success) {
+            return res.json(new apiResponse(400, null, updateData.error.errors));
+        }
+        console.log("Update Group Data", updateData.data);
+        const { name, sendmessageallowed, addmembersallowed } = updateData.data;
+      
+        let avatar;
+
+        if(req.file){
+            console.log("File",req.file);
+            const url =await req.file?.path; 
+            const fileUpload = await uploadOnCloudinary(url)
+            console.log("fileUpload",fileUpload)
+            avatar = {
+              public_id: fileUpload.public_id,
+              url: fileUpload.secure_url
+            };
+          }
+
+        const chat = await Chat.findById(chatId);
+        if (!chat) {
+            return res.json(new apiResponse(404, null, "Group not found"));
+        }
+
+        const isAdmin = chat.isAdmin.includes(req.user._id.toString());
+        if (!isAdmin) {
+            return res.json(new apiResponse(403, null, "Only admins can update group profile"));
+        }
+
+        // Prepare the fields to update
+        const updateFields = {};
+        if (name) updateFields.name = name;
+        if (avatar) updateFields.avatar = avatar;
+        if(sendmessageallowed) updateFields.sendmessageallowed = sendmessageallowed;
+        if(addmembersallowed) updateFields.addmembersallowed = addmembersallowed;
+
+        const updatedChat = await Chat.findByIdAndUpdate(
+            chatId,
+            { $set: updateFields },
+            { new: true }
+        );
+
+        if (!updatedChat) {
+            return res.json(new apiResponse(500, null, "Failed to update group profile"));
+        }
+
+        emitEvent(req, ALERT, updatedChat.members, `${req.user.name} updated the group profile`);
+        emitEvent(req, REFETECH_CHATS, updatedChat.members, null);
+
+        return res.json(new apiResponse(200, updatedChat, "Group profile updated successfully"));
+    } catch (error) {
+        console.error("Error updating group profile:", error);
+        return res.json(new apiResponse(500, null, "Something went wrong"));
+    }
+}
+);
+
+const getInvidualChat = asynhandler(async (req, res) => {
+    try {
+        const { chatId } = req.params;
+        if (!chatId) {
+            return res.json(new apiResponse(400, null, "Chat ID is required"));
+        }
+
+        const chat = await Chat.findById(chatId);
+        if (!chat) {
+            return res.json(new apiResponse(404, null, "Chat not found"));
+        }
+
+        return res.json(new apiResponse(200, chat, "Chat fetched successfully"));
+    } catch (error) {
+        console.error("Error fetching individual chat:", error);
+        return res.json(new apiResponse(500, null, "Something went wrong"));
+    }
+});
+
+const getCommonGroups = asynhandler(async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const currentUser = req.user._id;
+
+    if (!userId) {
+      return res.json(new apiResponse(400, null, "User ID is required"));
+    }
+
+    const groups = await Chat.find({
+      groupChat: true,
+      members: { $all: [userId, currentUser] }
+    })
+    .select("_id name avatar updatedAt members creator"); 
+
+    if (!groups || groups.length === 0) {
+      return res.json(new apiResponse(404, null, "No common groups found"));
+    }
+
+    return res.json(new apiResponse(200, groups, "Common groups fetched successfully"));
+  } catch (error) {
+    console.error("Error fetching common groups:", error);
+    return res.json(new apiResponse(500, null, "Something went wrong"));
+  }
+});
+
+
+const getPublicKey  = asynhandler(async(req,res) => {
+  const {chatId} = req.params;
+  console.log("Chat ID",chatId);
+  if(!chatId){
+    return res.json(new apiResponse(400,null,"Chat ID is required"));
+  }
+
+  const chat = await Chat.findById(chatId);
+  if(!chat){
+    return res.json(new apiResponse(404,null,"Chat not found"));
+  }
+  
+  
+  console.log("Chat",chat);
+
+  return res.json(new apiResponse(200,chat,"Public key fetched successfully"));
+})
+
 
 
   export  { 
@@ -490,5 +652,10 @@ const leaveGroup = asynhandler(async (req, res) => {
     makeAdmin,
     removeAdmin,
     membersUseriaAllowesToAdd,
-    leaveGroup
+    leaveGroup,
+    updateGroupProfile,
+    getInvidualChat,
+    getCommonGroups,
+    getPublicKey
+  
 };

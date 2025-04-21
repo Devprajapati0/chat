@@ -26,7 +26,7 @@ const RenderAttachment = (file,url) => {
             Your browser does not support the video tag.
             </video>
         );
-    case "pdf":
+    case "raw":
         return (
      
             <img

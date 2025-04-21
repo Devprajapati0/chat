@@ -1,89 +1,126 @@
-import Title from "../shared/Title";
 import Grid from "@mui/material/Grid";
+import { useEffect } from "react";
+import Paper from "@mui/material/Paper";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+
+import Title from "../shared/Title";
 import Header from "./Header";
-import { ChatList } from "../specific/ChatList";
-import { useParams } from "react-router-dom";
 import Profile from "../dialogs/Profile";
+import { ChatList } from "../specific/ChatList";
+import { useMyChatsQuery } from "../../store/api/api";
+import useErrors from "../../hooks/Hook";
+import { useSocket } from "../../Socket";
+import { useSelector } from "react-redux";
 
 const AppLayout = (WrappedComponent) => {
   const ComponentWithLayout = (props) => {
-    let { chatID } = useParams();
+    const socket = useSocket();
+    const { data, isLoading, error, isError } = useMyChatsQuery();
+    // console.log("data", data);
+
+    const AlertData = useSelector((state) => state.chat);
+    // console.log("newMessagesAlert",AlertData.newMessageAlert)
+
+    useEffect(() => {
+      if (socket && data?.data) {
+        const chatIds = data.data.map(chat => chat._id);
+        socket.emit("JOIN_CHATS", chatIds);
+      }
+    }, [socket, data]);
+
+    useErrors([{ isError, error }]);
+
+    if (!socket) return null;
+    if (isLoading) return <div>Loading...</div>;
+
+    const chats = data.data;
+    // console.log("chats", chats);
+
     const handleDeleteChat = (e) => {
-      e.preventDefault()
+      e.preventDefault();
       console.log("Delete Chat Opened");
     };
 
-    const sampledata = [{
-      avatar:[""],
-      name:"dev",
-      _id:"1",
-      groupChat:false,
-      members:["1","2"]
-    },
-    {
-      avatar:[""],
-      name:"ram",
-      _id:"2",
-      groupChat:false,
-      members:["2"]
-    }]
-
     return (
       <>
-        {/* Page Metadata */}
         <Title title="Chat App" description="Chat with your friends" />
 
-        {/* Header Section */}
-        <div style={{ backgroundColor: "#1976d2", color: "white", padding: "1rem", textAlign: "center" }}>
+        {/* Header */}
+        <Box sx={{ backgroundColor: "#1976d2", color: "white", p: 1.5, textAlign: "center" }}>
           <Header />
-        </div>
+        </Box>
 
-        {/* Main Layout Grid */}
-        <Grid container height="calc(100vh - 8rem)">
-          {/* Chat List Sidebar (Hidden on Small Screens) */}
-          <Grid 
-            item 
-            sm={4} 
-            md={3} 
-            sx={{ display: { xs: "none", sm: "block" }, bgcolor: "#f0f0f0", padding: "1rem" }}
+        {/* Main Layout */}
+        <Grid container sx={{ height: "calc(100vh - 6rem)", overflow: "hidden" }}>
+          {/* Sidebar */}
+          <Grid
+            item
+            sm={4}
+            md={3}
+            sx={{
+              display: { xs: "none", sm: "block" },
+              bgcolor: "#f5f5f5",
+              p: 1,
+              borderRight: "1px solid #ccc",
+              overflowY: "auto",
+            }}
           >
-            <ChatList 
-              chats={sampledata} 
-              chatID={chatID}
-              onlineUsers={["1","2"]} 
-              newMessageAlert={[{ chatID, count: 5 }]} 
-              handleDeleteChat={handleDeleteChat} 
-            />  
+            <Typography variant="subtitle1" gutterBottom>
+              Chats
+            </Typography>
+            <ChatList
+              chats={chats}
+              onlineUsers={["1", "2"]}
+              handleDeleteChat={handleDeleteChat}
+              newMessageAlert={AlertData.newMessageAlert}
+            />
           </Grid>
 
-          {/* Main Chat Section */}
-          <Grid 
-            item 
-            xs={12} 
-            sm={8} 
-            md={5} 
-            lg={6} 
-            sx={{ bgcolor: "#ffffff", padding: "1rem" }}
+          {/* Chat Area */}
+          <Grid
+            item
+            xs={12}
+            sm={8}
+            md={5}
+            lg={6}
+            sx={{
+              bgcolor: "#ffffff",
+              p: 0,
+              display: "flex",
+              flexDirection: "column",
+              height: "100%",
+              overflow: "hidden",
+            }}
           >
             <WrappedComponent {...props} />
           </Grid>
 
-          {/* Additional Panel (Hidden on Small Screens) */}
-          <Grid 
-            item 
-            sx={{ display: { xs: "none", md: "block" }, bgcolor: "#e3f2fd", padding: "1rem" }} 
-            md={4} 
+          {/* Profile Sidebar */}
+          <Grid
+            item
+            md={4}
             lg={3}
+            sx={{
+              display: { xs: "none", md: "block" },
+              bgcolor: "#f0f9ff",
+              p: 1,
+              overflowY: "auto",
+            }}
           >
-            {/* Placeholder for Future Widgets */}
-            <Profile />
+            <Typography variant="subtitle1" gutterBottom>
+              My Profile
+            </Typography>
+            <Paper elevation={2} sx={{ p: 1.5 }}>
+              <Profile />
+            </Paper>
           </Grid>
         </Grid>
 
-        {/* Footer Section */}
-        <div style={{ backgroundColor: "#1976d2", color: "white", padding: "1rem", textAlign: "center" }}>
-          Footer
-        </div>
+        {/* Footer */}
+        <Box sx={{ backgroundColor: "#1976d2", color: "white", p: 1.5, textAlign: "center" }}>
+          <Typography variant="body2">© 2025 Chat App. All rights reserved.</Typography>
+        </Box>
       </>
     );
   };

@@ -10,8 +10,14 @@ const chatSchema = new Schema(
       },
       members: [
         {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
+          _id: {
+            type: mongoose.Schema.Types.ObjectId
+          },
+          publicKey: {
+            type: String,
+   
+            default: null,
+          },
         },
       ],
       name: {

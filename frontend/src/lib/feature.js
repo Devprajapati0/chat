@@ -1,6 +1,6 @@
 export const fileFormat =(url="")=>{
     const file = url.split(".").pop();
-    if(file === "mp4" || file === "webm" || file === "ogg"){return "video"}
+    if(file === "mp4" || file === "webm"||file=="mov" || file === "ogg"){return "video"}
     if(file === "mp3" || file === "wav" || file === "ogg"){return "audio"}
     if(file === "jpg" || file === "jpeg" || file === "png" || file === "gif"){return "image"}
     if(file === "pdf"){return "pdf"}

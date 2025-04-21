@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import asynhandler from '../utils/asynchandler.js';
 import {User} from '../models/user.model.js';
-import apiResponse from '../utils/apiresponse.js';
+import apiResponse from '../utils/apiResponse.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -9,18 +9,21 @@ const authenticator = asynhandler(async(req,res,next) => {
     try {
         const accessToken = await req.cookies.accessToken || req.headers['Authorization']?.replace('Bearer ','');
         console.log("accessToken",accessToken)
+        console.log("1111111111111111111111111111111111111n b bha sbhxhsgchdbhjxbhxbhdchbhbbchbdxhdhjjhdxbbhdcbhjhahbhscbd chbhcdhbc jdbchjbdjch dhcbijdcjhbdhjchdcbdjcbdcindjd jcdjcjdcbjdc")
         if(!accessToken) {
             return res.json(
-                new apiResponse(401, null,"Unauthorized Access login again")
+                new apiResponse(401, null,"access")
             )
         }
+    
         const decode = jwt.verify(accessToken,process.env.ACCESS_TOKEN_SECRET);
-        console.log("decode",decode)
+        // console124_DEV.log("decode",decode)
         if(!decode) {
             return res.json(
                 new apiResponse(401, null,"Unauthorized Access login again")
             )
         }
+        // console.log("3")
 
         const user = await User.findById(decode._id).select('-password -refreshToken');
         if(!user) {
